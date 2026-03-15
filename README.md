@@ -15,7 +15,7 @@ Ensure you have Python 3.9+ installed.
 1. Clone the repository and navigate to the project directory:
 ```bash
 git clone https://github.com/itzsam-lol/LedgerLens.git
-cd benford-audit
+cd LedgerLens
 ```
 
 2. Install the required dependencies:

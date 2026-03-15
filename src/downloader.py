@@ -21,7 +21,7 @@ ALL_TICKERS = [ticker for sector_tickers in COMPANIES.values() for ticker in sec
 class SECDownloader:
     """Class to handle downloading of SEC 10-K filings."""
 
-    def __init__(self, raw_data_dir: Path, user_agent: str = "BenfordAuditProject (your.email@example.com)"):
+    def __init__(self, raw_data_dir: Path, user_agent: str = "LedgerLensProject (your.email@example.com)"):
         """
         Initialize the downloader.
 
@@ -33,7 +33,7 @@ class SECDownloader:
         self.raw_data_dir.mkdir(parents=True, exist_ok=True)
         # Assuming you provide a valid user agent
         # The syntax for sec-edgar-downloader >= 5.0.0 requires company name and email
-        self.dl = Downloader("BenfordAuditApp", "test@example.com", self.raw_data_dir)
+        self.dl = Downloader("LedgerLensApp", "test@example.com", self.raw_data_dir)
 
     def download_10k_filings(self, ticker: str, num_filings: int = 10, dry_run: bool = False):
         """
