@@ -1,0 +1,13 @@
+requests
+beautifulsoup4
+sec-edgar-downloader
+pandas
+numpy
+scipy
+matplotlib
+seaborn
+plotly
+reportlab
+tabulate
+jupyter
+tqdm
