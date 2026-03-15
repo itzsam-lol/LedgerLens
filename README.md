@@ -57,6 +57,15 @@ The pipeline automatically generates results into the `outputs/` directory:
   - `suspicion_scatter.html`
 - `outputs/reports/`: Executive PDF audit reports with automated insights for top flagged companies.
 
+## Example Output Visual
+![Anomaly Heatmap: First Digit Z-Scores by Company](outputs/charts/leaderboard_heatmap.png)
+
+## Preliminary Findings
+
+Based on an initial extraction of 10-K filings across our 30-company sample (which may change dynamically as filings are updated), **Technology and Finance** typically demonstrate the closest conformity to Benford's Law due to high volumes of natural transactions.
+
+However, the **Retail** sector frequently shows high Mean Absolute Deviation (MAD), likely driven by price points aggressively anchoring around specific numbers (e.g., $9.99, $19.99, which skew leading digits heavily toward 1, 9, 2, and 4 in aggregated financial reporting constraints).
+
 ### Sample Result Table
 
 | rank | ticker | sector    | suspicion_score | mad    | conformity_label      |
