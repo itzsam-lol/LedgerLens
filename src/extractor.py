@@ -1,6 +1,7 @@
 import re
 import csv
 import logging
+import datetime
 from pathlib import Path
 from bs4 import BeautifulSoup
 from collections import Counter
@@ -54,6 +55,10 @@ class NumberExtractor:
         matches = self.number_pattern.findall(text)
         valid_numbers = []
         
+        current_year = datetime.datetime.now().year
+        year_min = current_year - 40
+        year_max = current_year + 5
+        
         for match in matches:
             # Remove commas
             clean_str = match.replace(',', '')
@@ -64,7 +69,7 @@ class NumberExtractor:
                 if num < 10:
                     continue
                 # 2. Exclude typical years
-                if 1990 <= num <= 2030 and num.is_integer():
+                if year_min <= num <= year_max and num == int(num):
                     continue
                 
                 valid_numbers.append(num)
@@ -75,19 +80,25 @@ class NumberExtractor:
 
     def get_first_digit(self, number: float) -> int:
         """
-        Extract the first significant digit of a number.
-        
+        Extract the first significant digit of a number using scientific notation
+        formatting for robustness against floats of all magnitudes.
+
         Args:
-            number: The numeric value.
-            
+            number: The numeric value (must be positive and non-zero).
+
         Returns:
             The first significant digit (1-9) or 0 if invalid.
         """
-        s = str(abs(number))
-        for char in s:
-            if char.isdigit() and char != '0':
-                return int(char)
-        return 0
+        if number <= 0:
+            return 0
+        try:
+            # Format in scientific notation and read the first character
+            # e.g., 0.0045 -> '4.500e-03' -> first digit is 4
+            first_char = f"{number:.10e}"[0]
+            d = int(first_char)
+            return d if 1 <= d <= 9 else 0
+        except (ValueError, IndexError):
+            return 0
 
     def process_ticker(self, ticker: str):
         """
@@ -159,6 +170,13 @@ class NumberExtractor:
                 
             total_nums = sum(combined_digit_counts.values())
             logging.info(f"[✓] Extracted {total_nums} valid numbers for {ticker}")
+            
+            if total_nums < 300:
+                logging.warning(
+                    f"[!] {ticker} only yielded {total_nums} valid numbers. "
+                    f"Benford analysis requires a large sample — results may be unreliable. "
+                    f"Consider this ticker's results with caution."
+                )
 
 def run_extractor(raw_data_dir: Path, processed_data_dir: Path, dry_run: bool = False, specific_ticker: str = None):
     """

@@ -48,9 +48,17 @@ class BenfordAnalyzer:
                 "chi2": np.nan, "p_value": np.nan, "mad": np.nan,
                 "digit_zscores": [np.nan] * 9, "conformity_label": "No Data",
                 "n_samples": 0, "flagged_digits": 0,
-                "observed_proportions": [0.0] * 9
+                "observed_proportions": [0.0] * 9,
+                "reliable": False
             }
             
+        MIN_RELIABLE_SAMPLES = 100
+        if total_samples < MIN_RELIABLE_SAMPLES:
+            import logging
+            logging.warning(
+                f"[!] Only {total_samples} samples available. Chi-Square results are unreliable "
+                f"below {MIN_RELIABLE_SAMPLES} samples. Interpret with caution."
+            )
         observed_proportions = observed_counts / total_samples
         expected_counts = self.EXPECTED_PROPORTIONS * total_samples
         
@@ -88,5 +96,6 @@ class BenfordAnalyzer:
             "conformity_label": conformity_label,
             "n_samples": int(total_samples),
             "flagged_digits": int(flagged_digits),
-            "observed_proportions": [float(p) for p in observed_proportions]
+            "observed_proportions": [float(p) for p in observed_proportions],
+            "reliable": total_samples >= MIN_RELIABLE_SAMPLES
         }

@@ -1,4 +1,5 @@
 import time
+import os
 from pathlib import Path
 from sec_edgar_downloader import Downloader
 import logging
@@ -33,7 +34,14 @@ class SECDownloader:
         self.raw_data_dir.mkdir(parents=True, exist_ok=True)
         # Assuming you provide a valid user agent
         # The syntax for sec-edgar-downloader >= 5.0.0 requires company name and email
-        self.dl = Downloader("LedgerLensApp", "test@example.com", self.raw_data_dir)
+        user_email = os.getenv("LEDGERLENS_EMAIL", "test@example.com")
+        if user_email == "test@example.com":
+            logging.warning(
+                "[!] SEC EDGAR requires a valid email in the User-Agent. "
+                "Set the LEDGERLENS_EMAIL environment variable to avoid being rate-limited. "
+                "Example: export LEDGERLENS_EMAIL=your@email.com"
+            )
+        self.dl = Downloader("LedgerLensApp", user_email, self.raw_data_dir)
 
     def download_10k_filings(self, ticker: str, num_filings: int = 10, dry_run: bool = False):
         """
@@ -68,6 +76,14 @@ class SECDownloader:
             
             # Rate limiting as required by SEC EDGAR (at least 0.1s, 0.5s is safer)
             time.sleep(0.5)
+            
+            # Verify files were actually downloaded
+            downloaded_count = len(list(ticker_dir.iterdir())) if ticker_dir.exists() else 0
+            if downloaded_count == 0:
+                logging.warning(f"[!] {ticker}: Download completed but no files found in {ticker_dir}. "
+                                f"Check your LEDGERLENS_EMAIL or SEC EDGAR connectivity.")
+            else:
+                logging.info(f"[✓] {ticker}: {downloaded_count} filing(s) confirmed on disk.")
             
         except Exception as e:
             logging.error(f"[X] Failed to download data for {ticker}. Error: {e}")

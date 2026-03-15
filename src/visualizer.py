@@ -5,6 +5,7 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 import logging
+import datetime
 from pathlib import Path
 from src.benford import BenfordAnalyzer
 
@@ -64,6 +65,7 @@ class Visualizer:
         
         for _, row in self.df.iterrows():
             ticker = row['ticker']
+            is_reliable = row.get('reliable', True)
             
             # Extract prepended columns
             z_scores = [row[f'Z_digit_{i}'] for i in range(1, 10)]
@@ -98,6 +100,11 @@ class Visualizer:
             ax.grid(axis='y', alpha=0.3)
             
             plt.tight_layout()
+            if not is_reliable:
+                fig.text(0.5, 0.01,
+                         "⚠ Low sample count — results may be statistically unreliable",
+                         ha='center', fontsize=10, color='orange',
+                         transform=fig.transFigure)
             plt.savefig(self.charts_dir / f"company_overlay_{ticker}.png", dpi=300)
             plt.close()
 
@@ -108,7 +115,12 @@ class Visualizer:
             
         # Prepare data
         z_cols = [f'Z_digit_{i}' for i in range(1, 10)]
-        heatmap_data = self.df[['ticker'] + z_cols].set_index('ticker')
+        heatmap_data = (
+            self.df
+            .sort_values('suspicion_score', ascending=False)
+            [['ticker'] + z_cols]
+            .set_index('ticker')
+        )
         # Rename columns to just the digit
         heatmap_data.columns = [str(i) for i in range(1, 10)]
         
@@ -168,7 +180,9 @@ class Visualizer:
         fig = px.scatter(
             self.df, x="chi2", y="mad",
             size="n_samples", color="sector",
+            size_max=45,
             hover_name="ticker",
+            hover_data={"n_samples": True},
             labels={
                 "chi2": "Chi-Square Statistic",
                 "mad": "Mean Absolute Deviation (MAD)",
@@ -224,7 +238,6 @@ class Visualizer:
             story.append(Paragraph(f"Sector: {row['sector']}", subtitle_style))
             story.append(Spacer(1, 0.5*inch))
             
-            import datetime
             date_str = datetime.datetime.now().strftime("%B %d, %Y")
             story.append(Paragraph(f"Date of Analysis: {date_str}", subtitle_style))
             

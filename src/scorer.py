@@ -50,6 +50,7 @@ class Scorer:
                 "conformity_label": analysis["conformity_label"],
                 "flagged_digits": analysis["flagged_digits"],
                 "n_samples": analysis["n_samples"],
+                "reliable": analysis.get("reliable", True),
                 **z_scores_dict,
                 **obs_dict
             }
@@ -68,8 +69,13 @@ class Scorer:
             
         # Normalize columns via Min-Max scaling
         def min_max_scale(series):
+            """
+            Min-max normalize a series to [0, 1].
+            If all values are identical (e.g. single company run), return 0.5 as a
+            neutral midpoint score rather than 0, which would be misleading.
+            """
             if series.max() == series.min():
-                return series * 0
+                return pd.Series([0.5] * len(series), index=series.index)
             return (series - series.min()) / (series.max() - series.min())
 
         df["norm_chi2"] = min_max_scale(df["chi2"])
@@ -86,7 +92,7 @@ class Scorer:
         leaderboard["rank"] = leaderboard.index + 1
         
         # Keep detailed columns but reorder for clarity
-        cols_front = ["rank", "ticker", "sector", "suspicion_score", "mad", "chi2", "p_value", "conformity_label", "flagged_digits", "n_samples"]
+        cols_front = ["rank", "ticker", "sector", "suspicion_score", "mad", "chi2", "p_value", "conformity_label", "flagged_digits", "n_samples", "reliable"]
         cols_z = [f"Z_digit_{i}" for i in range(1, 10)]
         cols_obs = [f"Obs_digit_{i}" for i in range(1, 10)]
         
@@ -102,7 +108,7 @@ class Scorer:
             return
             
         print("\n🏆 Suspicion Leaderboard (Top 15) 🏆")
-        display_cols = ["rank", "ticker", "sector", "suspicion_score", "mad", "conformity_label", "flagged_digits", "n_samples"]
+        display_cols = ["rank", "ticker", "sector", "suspicion_score", "mad", "conformity_label", "flagged_digits", "n_samples", "reliable"]
         
         # Format columns for display
         df_disp = leaderboard.head(15)[display_cols].copy()
