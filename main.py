@@ -1,6 +1,8 @@
 import argparse
 import logging
 import time
+import sys
+import pandas as pd
 from pathlib import Path
 
 # Local imports
@@ -69,7 +71,8 @@ def main():
             if leaderboard_path.exists():
                 viz = Visualizer(leaderboard_path, charts_dir, reports_dir)
             else:
-                logging.warning("Leaderboard not found. Run --analyze first to generate data for visualization.")
+                logging.error("Cannot visualize — leaderboard.csv missing. Run: python main.py --analyze first.")
+                sys.exit(1)
 
         if viz and (args.all or args.visualize):
             logging.info("=== STEP 4: GENERATING VISUALIZATIONS ===")
@@ -100,7 +103,6 @@ def main():
         # Determine summary statistics if analyze was run
         leaderboard_path = outputs_dir / "leaderboard.csv"
         if leaderboard_path.exists():
-            import pandas as pd
             df = pd.read_csv(leaderboard_path)
             total = len(df)
             flagged = len(df[df['conformity_label'].str.contains("Nonconformity")])
